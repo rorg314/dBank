@@ -15,6 +15,8 @@ class App extends Component {
   async loadBlockchainData(dispatch) {
     if(typeof window.ethereum!=='undefined'){
       const web3 = new Web3(window.ethereum)
+      const eth = window.ethereum
+
       // Fix for depreciated web3
       window.ethereum.enable().catch(error => {
         // User denied account access
@@ -23,15 +25,19 @@ class App extends Component {
       
       
       const netId = await web3.eth.net.getId()
-      const accounts = await web3.eth.getAccounts()
-
-      console.log(netId)
+      
+      //const accounts = await web3.eth.getAccounts()
+      const accounts = await eth.request({method: 'eth_accounts'})
       console.log(accounts)
+
+      
 
       //load balance
       if(typeof accounts[0] !=='undefined'){
-        const balance = await web3.eth.getBalance(accounts[0])
-        console.log(balance)
+        //const balance = await web3.eth.getBalance(accounts[0])
+        const balance = await eth.request({method:'eth_getBalance', params: [accounts[0]] })
+
+        console.log(parseInt(balance))
         this.setState({account: accounts[0], balance: balance, web3: web3})
       } else {
         window.alert('Please login with MetaMask')
