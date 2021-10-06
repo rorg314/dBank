@@ -24,8 +24,8 @@ class App extends Component {
       })
       
       
-      const netId = await web3.eth.net.getId()
-      
+      //const netId = await web3.eth.net.getId()
+      const netId = await eth.request({method: 'eth_chainId'})
       //const accounts = await web3.eth.getAccounts()
       const accounts = await eth.request({method: 'eth_accounts'})
       console.log(accounts)

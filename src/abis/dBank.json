@@ -85,8 +85,7 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function",
-      "constant": true
+      "type": "function"
     },
     {
       "inputs": [
@@ -105,8 +104,7 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function",
-      "constant": true
+      "type": "function"
     },
     {
       "inputs": [
@@ -125,16 +123,14 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function",
-      "constant": true
+      "type": "function"
     },
     {
       "inputs": [],
       "name": "deposit",
       "outputs": [],
       "stateMutability": "payable",
-      "type": "function",
-      "payable": true
+      "type": "function"
     },
     {
       "inputs": [],
@@ -148,8 +144,7 @@
       "name": "borrow",
       "outputs": [],
       "stateMutability": "payable",
-      "type": "function",
-      "payable": true
+      "type": "function"
     },
     {
       "inputs": [],
@@ -168,7 +163,7 @@
   "sourceMap": "93:3145:6:-:0;;;770:103;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;861:6;853:5;;:14;;;;;;;;;;;;;;;;;;770:103;93:3145;;;;;;",
   "deployedSourceMap": "93:3145:6:-:0;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;240:46;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;:::i;:::-;;;;;;;;;;;;;;;;;;;1621:1051;;;;;;;;;;;;;:::i;:::-;;3008:227;;;;;;;;;;;;;:::i;:::-;;433:43;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;:::i;:::-;;;;;;;;;;;;;;;;;;;;;879:736;;;:::i;:::-;;2678:324;;;:::i;:::-;;362:44;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;:::i;:::-;;;;;;;;;;;;;;;;;;;240:46;;;;;;;;;;;;;;;;;:::o;1621:1051::-;1738:4;1713:29;;:11;:23;1725:10;1713:23;;;;;;;;;;;;;;;;;;;;;;;;;:29;;;1705:68;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1849:16;1868:14;:26;1883:10;1868:26;;;;;;;;;;;;;;;;1849:45;;1933:16;1970:12;:24;1983:10;1970:24;;;;;;;;;;;;;;;;1952:15;:42;1933:61;;2184:22;2235:4;2221:11;:18;;;;;;2209:8;:31;2184:56;;2247:13;2283:11;2263:17;:31;2247:47;;2332:10;:19;;:32;2352:11;2332:32;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;2410:5;;;;;;;;;;:10;;;2421;2433:8;2410:32;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;2504:1;2477:12;:24;2490:10;2477:24;;;;;;;;;;;;;;;:28;;;;2541:1;2512:14;:26;2527:10;2512:26;;;;;;;;;;;;;;;:30;;;;2575:5;2549:11;:23;2561:10;2549:23;;;;;;;;;;;;;;;;:31;;;;;;;;;;;;;;;;;;2619:10;2610:56;;;2631:11;2644;2657:8;2610:56;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1621:1051;;;;:::o;3008:227::-;:::o;433:43::-;;;;;;;;;;;;;;;;;;;;;;:::o;879:736::-;1013:5;986:32;;:11;:23;998:10;986:23;;;;;;;;;;;;;;;;;;;;;;;;;:32;;;978:74;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1124:4;1113:9;:15;;1105:62;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1312:9;1283:14;:26;1298:10;1283:26;;;;;;;;;;;;;;;;:38;1254:14;:26;1269:10;1254:26;;;;;;;;;;;;;;;:67;;;;1425:15;1398:12;:24;1411:10;1398:24;;;;;;;;;;;;;;;;:42;1371:12;:24;1384:10;1371:24;;;;;;;;;;;;;;;:69;;;;1520:4;1494:11;:23;1506:10;1494:23;;;;;;;;;;;;;;;;:30;;;;;;;;;;;;;;;;;;1570:10;1562:47;;;1582:9;1593:15;1562:47;;;;;;;;;;;;;;;;;;;;;;;;879:736::o;2678:324::-;:::o;362:44::-;;;;;;;;;;;;;;;;;:::o",
   "source": "// SPDX-License-Identifier: MIT\r\npragma solidity >=0.6.0 <0.8.0;\r\n\r\nimport \"./Token.sol\";\r\n\r\ncontract dBank {\r\n\r\n  //assign Token contract to variable\r\n  Token private token;\r\n  \r\n  //MAPPINGS\r\n  //R Stores ether balance of each address\r\n  mapping(address => uint) public etherBalanceOf;\r\n  //R Stores start block # of deposit (for calculating interest time)\r\n  mapping(address => uint) public depositStart;\r\n  //R Deposit status\r\n  mapping(address => bool) public isDeposited;\r\n  \r\n  //add events\r\n  //R Deposit event\r\n  event Deposit(address indexed user, uint etherAmount, uint timeStart);\r\n  //R Withdraw event\r\n  event Withdraw(address indexed user, uint etherAmount, uint depositTime, uint interest);\r\n\r\n  //pass as constructor argument deployed Token contract\r\n  constructor(Token _token) {\r\n    //assign token deployed contract to variable\r\n    token = _token;\r\n  }\r\n\r\n  function deposit() payable public {\r\n    //check if msg.sender didn't already deposited funds\r\n    require(isDeposited[msg.sender] == false, 'Error, deposit already active');\r\n    //check if msg.value is >= than 0.01 ETH\r\n    require(msg.value>=1e16, 'Error, deposit must be >= 0.01 ETH');\r\n    \r\n    //R Increase the balance of the msg sending user with the sent value\r\n    etherBalanceOf[msg.sender] = etherBalanceOf[msg.sender] + msg.value;\r\n    \r\n    //start msg.sender hodling time\r\n    depositStart[msg.sender] = depositStart[msg.sender] + block.timestamp;\r\n\r\n    //set msg.sender deposit status to true\r\n    isDeposited[msg.sender] = true;\r\n    //emit Deposit event\r\n    emit Deposit(msg.sender, msg.value, block.timestamp);\r\n  }\r\n\r\n  function withdraw() public {\r\n    //check if msg.sender deposit status is true\r\n    require(isDeposited[msg.sender]==true, 'Error, no previous deposit');\r\n    //assign msg.sender ether deposit balance to variable for event\r\n    uint userBalance = etherBalanceOf[msg.sender];\r\n\r\n    //check user's hodl time\r\n    uint depositTime = block.timestamp - depositStart[msg.sender];\r\n\r\n    //R Calculate interest    \r\n    //31668017 - interest(10% APY) per second for min. deposit amount (0.01 ETH)\r\n    //1e15(10% of 0.01 ETH) / 31577600 (seconds in 365.25 days)\r\n\r\n    uint interestPerSecond = 31668017 * (userBalance / 1e16);\r\n    uint interest = interestPerSecond * depositTime;\r\n\r\n    //send eth back to user\r\n    msg.sender.transfer(userBalance);\r\n    //send interest in tokens to user\r\n    token.mint(msg.sender, interest);\r\n    //reset depositer data\r\n    depositStart[msg.sender] = 0;\r\n    etherBalanceOf[msg.sender] = 0;\r\n    isDeposited[msg.sender] = false;\r\n    //emit event\r\n    emit Withdraw(msg.sender, userBalance, depositTime, interest);\r\n  }\r\n\r\n  function borrow() payable public {\r\n    //check if collateral is >= than 0.01 ETH\r\n    //check if user doesn't have active loan\r\n\r\n    //add msg.value to ether collateral\r\n\r\n    //calc tokens amount to mint, 50% of msg.value\r\n\r\n    //mint&send tokens to user\r\n\r\n    //activate borrower's loan status\r\n\r\n    //emit event\r\n  }\r\n\r\n  function payOff() public {\r\n    //check if loan is active\r\n    //transfer tokens from user back to the contract\r\n\r\n    //calc fee\r\n\r\n    //send user's collateral minus fee\r\n\r\n    //reset borrower's data\r\n\r\n    //emit event\r\n  }\r\n}",
-  "sourcePath": "F:\\UNISOFT\\Blockchain\\blockchaintest\\src\\contracts\\dBank.sol",
+  "sourcePath": "D:\\Coding\\dBank\\src\\contracts\\dBank.sol",
   "ast": {
     "absolutePath": "project:/src/contracts/dBank.sol",
     "exportedSymbols": {
@@ -5913,8 +5908,7 @@
     }
   },
   "schemaVersion": "3.4.3",
-  "updatedAt": "2021-10-06T11:45:02.506Z",
-  "networkType": "ethereum",
+  "updatedAt": "2021-10-06T14:22:32.309Z",
   "devdoc": {
     "kind": "dev",
     "methods": {},
