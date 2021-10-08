@@ -4,6 +4,7 @@ import React, { Component } from 'react';
 import Token from '../abis/Token.json'
 import dbank from '../dbank.png';
 import Web3 from 'web3';
+import {ethers} from 'ethers';
 import './App.css';
 
 class App extends Component {
@@ -17,27 +18,34 @@ class App extends Component {
       const web3 = new Web3(window.ethereum)
       const eth = window.ethereum
 
+      const provider = new ethers.providers.Web3Provider(window.ethereum)
+      const signer = provider.getSigner()
+
+
       // Fix for depreciated web3
-      window.ethereum.enable().catch(error => {
-        // User denied account access
-        console.log(error)
-      })
+      // window.ethereum.enable().catch(error => {
+      //   // User denied account access
+      //   console.log(error)
+      // })
       
-      
+      //Web3
       //const netId = await web3.eth.net.getId()
-      const netId = await eth.request({method: 'eth_chainId'})
+      //eth
+      //const netId = parseInt(await eth.request({method: 'eth_chainId'}))
+      //ethers
+      const netId = provider.getNetwork(0)['chainId']
       //const accounts = await web3.eth.getAccounts()
       const accounts = await eth.request({method: 'eth_accounts'})
       console.log(accounts)
-
+      console.log(netId)
       
 
       //load balance
       if(typeof accounts[0] !=='undefined'){
         //const balance = await web3.eth.getBalance(accounts[0])
-        const balance = await eth.request({method:'eth_getBalance', params: [accounts[0]] })
+        const balance = parseInt(await eth.request({method:'eth_getBalance', params: [accounts[0], 'latest'] }))
 
-        console.log(parseInt(balance))
+        console.log(balance)
         this.setState({account: accounts[0], balance: balance, web3: web3})
       } else {
         window.alert('Please login with MetaMask')
@@ -45,7 +53,10 @@ class App extends Component {
 
       //load contracts
       try {
-        const token = new web3.eth.Contract(Token.abi, Token.networks[netId].address)
+        const token = provider.getCode(Token.abi)
+        
+        //const token = new web3.eth.Contract(Token.abi, Token.networks[netId].address)
+        //const token = window.ethereum.Contract(Token.abi, Token.networks[netId].address)
         const dbank = new web3.eth.Contract(dBank.abi, dBank.networks[netId].address)
         const dBankAddress = dBank.networks[netId].address
         this.setState({token: token, dbank: dbank, dBankAddress: dBankAddress})
