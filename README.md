@@ -1,6 +1,6 @@
 # dBank 
 
-This repository replicates the tutorial example from the following [tutorial](https://www.youtube.com/watch?v=xWFba_9QYmc&t=5417s) about decentralised app development with Solidity/Truffle/Ganache.  
+This repository replicates the example dApp from the following [tutorial](https://www.youtube.com/watch?v=xWFba_9QYmc&t=5417s) about decentralised app development with Solidity/Truffle/Ganache.  
 
 The dApp consists of a bank where users can deposit ETH and earn interest in a new token DBC (decentralised bank currency).
 
