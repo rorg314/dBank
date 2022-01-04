@@ -6,4 +6,4 @@ The dApp consists of a bank where users can deposit ETH and earn interest in a n
 
 # Web3.js vs ethers.js
 
-The frontent website in the tutorial was created in react using the Web3.js library, I have been working on updating this to the ethers.js library for forward compatibility, which can be found in the ethers branch of the repository.
+The frontend website in the tutorial was created in React and utilises the Web3.js library, I have been working on updating this to the ethers.js library for forward compatibility, which can be found in the ethers branch of the repository.
